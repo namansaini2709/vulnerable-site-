@@ -1,7 +1,11 @@
 import sqlite3
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 DB_PATH = 'shopeasy.db'
+
 
 def setup_db():
     if os.path.exists(DB_PATH):
@@ -64,7 +68,7 @@ def setup_db():
         ("Wireless Noise-Canceling Headphones", "Premium sound with 30-hour battery life", 299.99, "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60"),
         ("Smart Watch Series 8", "Track your health and fitness effortlessly", 399.99, "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=500&auto=format&fit=crop&q=60"),
         ("4K Ultra HD Smart TV", "55-inch display with vibrant colors", 499.99, "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500&auto=format&fit=crop&q=60"),
-        ("Mechanical Gaming Keyboard", "RGB backlit with tactile switches", 129.99, "https://images.unsplash.com/photo-1595225476474-87563907a212?w=500&auto=format&fit=crop&q=60"),
+        ("Mechanical Gaming Keyboard", "RGB backlit with tactile switches", 129.99, "https://images.unsplash.com/photo-1595225476474-87563907a212?w=500&auto=format&fix=crop&q=60"),
         ("Ultra-Light Laptop", "16GB RAM, 512GB SSD, all-day battery", 1199.99, "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&auto=format&fit=crop&q=60")
     ]
     c.executemany('INSERT INTO products (name, description, price, image_url) VALUES (?, ?, ?, ?)', products)
@@ -79,23 +83,28 @@ def setup_db():
     ]
     c.executemany('INSERT INTO orders (user_id, name, email, address, card_last4, total) VALUES (?, ?, ?, ?, ?, ?)', orders)
     
+    # Add logging to mitigate DNS issue creation to prevent unexpected behavior.
+    logging.info('Database initialised successfully.')
     conn.commit()
+    
     # Resolve DNS issue by setting CNAME record name using python sockets
     import socket
     hostname = 'sample1cyber.onrender.com'
     mydomain = 'namansaini2709-sample1cyber.default.onrender.com'
     myip = '127.0.0.1'
-    # Create an AF_INET socket and bind it to mydomain with IP address
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((mydomain, 0))
-    s.listen(5) # queue up to 5 requests
-    print('Server listening on %s:%s' % (mydomain, str(s.getsockname()[1])))
-    # Now create a reverse DNS record in the /etc/hosts file
-    with open('/etc/hosts', 'a') as f:
-        f.write(myip + ' ' + mydomain)
     
-    conn.close()
-    print("Database initialised successfully.")
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind((mydomain, 0))
+        s.listen(5) # queue up to 5 requests
+        logging.info('Server listening on %s:%s' % (mydomain, str(s.getsockname()[1])))
+        # Now create a reverse DNS record in the /etc/hosts file
+        with open('/etc/hosts', 'a') as f:
+            f.write(myip + ' ' + mydomain)
+        conn.close()
+        logging.info("Database initialised successfully.")
+    except Exception as e:
+        logging.error(str(e))
 
 if __name__ == '__main__':
     setup_db()
