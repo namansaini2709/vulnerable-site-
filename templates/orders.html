@@ -1,0 +1,37 @@
+{% extends 'layout.html' %}
+
+{% block title %}Order Details - ShopEasy{% endblock %}
+
+{% block content %}
+<div class="order-container">
+    <!-- IDOR Vulnerability: Fetching orders purely by ?id=... with no authorization checks -->
+    <h2>Order #{{ order['id'] }} Summary</h2>
+    
+    <div class="order-card">
+        <div class="order-section">
+            <h3>Customer Information</h3>
+            <p><strong>Name:</strong> {{ order['name'] }}</p>
+            <p><strong>Email:</strong> {{ order['email'] }}</p>
+        </div>
+        
+        <div class="order-section">
+            <h3>Shipping Address</h3>
+            <p>{{ order['address'] }}</p>
+        </div>
+        
+        <div class="order-section">
+            <h3>Payment Information</h3>
+            <p><strong>Card:</strong> **** **** **** {{ order['card_last4'] }}</p>
+            <p class="order-total"><strong>Total Billed:</strong> ${{ "%.2f"|format(order['total']) }}</p>
+        </div>
+    </div>
+    
+    <div class="demo-hints" style="margin-top: 2rem;">
+        <h3>Security Demo Hints:</h3>
+        <ul>
+            <li>Try changing the <code>?id=</code> parameter in the URL.</li>
+            <li>You can view anyone's order regardless of who you are logged in as!</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

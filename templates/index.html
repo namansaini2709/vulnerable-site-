@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    {% if query %}
+        Search Results for {{ query|safe }} - ShopEasy
+    {% else %}
+        ShopEasy - Premium E-commerce
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if query %}
+        <div class="search-results-info">
+            <!-- XSS Vulnerability: Query rendered with |safe so bypasses HTML escaping -->
+            <h2>Search results for: <span class="highlight">{{ query|safe }}</span></h2>
+        </div>
+    {% else %}
+        <section class="hero">
+            <h2>Welcome to ShopEasy</h2>
+            <p>Find the best products at unbeatable prices.</p>
+        </section>
+    {% endif %}
+
+    <div class="product-grid">
+        {% for product in products %}
+            <div class="product-card">
+                <img src="{{ product['image_url'] }}" alt="{{ product['name'] }}">
+                <div class="product-info">
+                    <h3>{{ product['name'] }}</h3>
+                    <p class="price">${{ "%.2f"|format(product['price']) }}</p>
+                    <a href="{{ url_for('product', product_id=product['id']) }}" class="btn view-btn">View Details</a>
+                </div>
+            </div>
+        {% else %}
+            <p class="no-results">No products found.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

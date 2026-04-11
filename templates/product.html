@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ product['name'] }} - ShopEasy{% endblock %}
+
+{% block content %}
+<div class="product-detail">
+    <div class="product-image-container">
+        <img src="{{ product['image_url'] }}" alt="{{ product['name'] }}" class="product-image-large">
+    </div>
+    
+    <div class="product-details-info">
+        <h2>{{ product['name'] }}</h2>
+        <p class="price-large">${{ "%.2f"|format(product['price']) }}</p>
+        
+        <div class="description-box">
+            <h4>Product Description</h4>
+            <p>{{ product['description'] }}</p>
+        </div>
+        
+        <button class="btn btn-primary add-to-cart">Add to Cart</button>
+        
+        <div class="shipping-info">
+            <p>🚚 Free shipping on orders over $50</p>
+            <p>↩️ 30-day return policy</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
