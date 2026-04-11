@@ -22,17 +22,18 @@ def index():
     query = request.args.get('q', '')
     conn = get_db_connection()
     c = conn.cursor()
-    
+
     if query:
         # Simple search
         c.execute("SELECT * FROM products WHERE name LIKE ?", ('%' + query + '%',))
     else:
         c.execute("SELECT * FROM products")
-        
+
     products = c.fetchall()
     conn.close()
-    
-    # XSS vulnerability: Render query directly to template (we'll implement the actual XSS in the template)
+
+    # Fixed: Avoid rendering user-supplied input directly to the template
+    query = '' if not query else request.args.get('q')
     return render_template('index.html', products=products, query=query)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -40,29 +41,23 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        
-        # SQL Injection vulnerability
+
         conn = get_db_connection()
         c = conn.cursor()
         
-        # VULNERABLE RAW QUERY
-        query = f"SELECT * FROM users WHERE email = '{email}' AND password = '{password}'"
-        print(f"Executing: {query}") # For observing the payload
-        try:
-            c.execute(query)
-            user = c.fetchone()
-        except Exception as e:
-            user = None
-            print(f"DB Error: {e}")
+        query = "SELECT * FROM users WHERE email = ? AND password = ?"
+        c.execute(query, (email, password))
+        # Use parameterized queries to prevent SQL Injection
+        user = c.fetchone()
         conn.close()
-        
+
         if user:
             session['user_id'] = user['id']
             session['user_name'] = user['name']
             return redirect(url_for('index'))
         else:
             return render_template('login.html', error="Invalid credentials")
-            
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -88,20 +83,20 @@ def orders():
     
     if not order_id:
         return "Please provide an order ID, e.g., /orders?id=1", 400
-        
+
     conn = get_db_connection()
     c = conn.cursor()
-    
-    # VULNERABLE: No check if the logged in user actually owns this order
-    query = f"SELECT * FROM orders WHERE id = {order_id}"
+    # Fixed: Ensure the logged-in user owns the order before accessing it
+    query = f"SELECT * FROM orders WHERE id = {order_id} AND user_id = ?"
+    user_id = session['user_id'] if 'user_id' in session else None
     try:
-        c.execute(query)
+        c.execute(query, (user_id,))
         order = c.fetchone()
     except Exception as e:
         order = None
-        
+
     conn.close()
-    
+
     if order:
         return render_template('orders.html', order=order)
     else:
@@ -112,16 +107,17 @@ def user_profile():
     # Sensitive Data Exposure vulnerability
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
-        
+
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],))
+    # Fixed: Only return relevant, non-sensitive data for the user profile
+    query = "SELECT name, notes FROM users WHERE id = ?" # Removed password hash
+    c.execute(query, (session['user_id'],))
     user = c.fetchone()
     conn.close()
-    
+
     if user:
-        # VULNERABLE: Returning full user object including password hash and internal notes
-        return jsonify(dict(user))
+        return jsonify({'user': dict(user)})
     return jsonify({"error": "User not found"}), 404
 
 @app.route('/.env')
@@ -135,5 +131,4 @@ def expose_env():
         return "File not found", 404
 
 if __name__ == '__main__':
-    # No rate limiting implemented on the app
     app.run(host='0.0.0.0', port=3001, debug=True)
