@@ -17,6 +17,15 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+# Add security headers
+def add_security_headers(response):
+    response.headers['Content-Security-Policy'] = "default-src 'self';"
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
+
 @app.route('/')
 def index():
     query = request.args.get('q', '')
@@ -33,7 +42,8 @@ def index():
     conn.close()
     
     # XSS vulnerability: Render query directly to template (we'll implement the actual XSS in the template)
-    return render_template('index.html', products=products, query=query)
+    response = make_response(render_template('index.html', products=products, query=query))
+    return add_security_headers(response)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -59,16 +69,20 @@ def login():
         if user:
             session['user_id'] = user['id']
             session['user_name'] = user['name']
-            return redirect(url_for('index'))
+            response = make_response(redirect(url_for('index')))
+            return add_security_headers(response)
         else:
-            return render_template('login.html', error="Invalid credentials")
+            response = make_response(render_template('login.html', error="Invalid credentials"))
+            return add_security_headers(response)
             
-    return render_template('login.html')
+    response = make_response(render_template('login.html'))
+    return add_security_headers(response)
 
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    response = make_response(redirect(url_for('index')))
+    return add_security_headers(response)
 
 @app.route('/product/<int:product_id>')
 def product(product_id):
@@ -78,8 +92,10 @@ def product(product_id):
     product = c.fetchone()
     conn.close()
     if not product:
-        return "Not found", 404
-    return render_template('product.html', product=product)
+        response = make_response("Not found", 404)
+    else:
+        response = make_response(render_template('product.html', product=product))
+    return add_security_headers(response)
 
 @app.route('/orders')
 def orders():
@@ -87,8 +103,9 @@ def orders():
     order_id = request.args.get('id')
     
     if not order_id:
-        return "Please provide an order ID, e.g., /orders?id=1", 400
-        
+        response = make_response("Please provide an order ID, e.g., /orders?id=1", 400)
+        return add_security_headers(response)
+    
     conn = get_db_connection()
     c = conn.cursor()
     
@@ -103,26 +120,26 @@ def orders():
     conn.close()
     
     if order:
-        return render_template('orders.html', order=order)
+        response = make_response(render_template('orders.html', order=order))
     else:
-        return "Order not found", 404
+        response = make_response("Order not found", 404)
+    return add_security_headers(response)
 
 @app.route('/api/user/profile')
 def user_profile():
     # Sensitive Data Exposure vulnerability
     if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
+        response = make_response(jsonify({"error": "Unauthorized"}), 401)
+    else:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],))
+        user = c.fetchone()
+        conn.close()
         
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],))
-    user = c.fetchone()
-    conn.close()
-    
-    if user:
         # VULNERABLE: Returning full user object including password hash and internal notes
-        return jsonify(dict(user))
-    return jsonify({"error": "User not found"}), 404
+        response = make_response(jsonify(dict(user)))
+    return add_security_headers(response)
 
 @app.route('/.env')
 def expose_env():
@@ -130,9 +147,10 @@ def expose_env():
     # In a real app, web server config might prevent this, or it's misconfigured.
     # We deliberately serve it to simulate a misconfiguration.
     try:
-        return send_from_directory('.', '.env', mimetype='text/plain')
+        response = make_response(send_from_directory('.', '.env', mimetype='text/plain'))
     except Exception:
-        return "File not found", 404
+        response = make_response("File not found", 404)
+    return add_security_headers(response)
 
 if __name__ == '__main__':
     # No rate limiting implemented on the app
