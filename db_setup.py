@@ -1,15 +1,21 @@
 import sqlite3
 import os
+import hashlib
 
 DB_PATH = 'shopeasy.db'
+
+# Define a function to hash passwords
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
 
 def setup_db():
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
-        
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    
+
     # Create tables
     c.execute('''
         CREATE TABLE users (
@@ -20,7 +26,7 @@ def setup_db():
             internal_notes TEXT
         )
     ''')
-    
+
     c.execute('''
         CREATE TABLE products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,7 +36,7 @@ def setup_db():
             image_url TEXT
         )
     ''')
-    
+
     c.execute('''
         CREATE TABLE orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,22 +49,22 @@ def setup_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
-    
-    # Populate Users (10 users)
+
+    # Populate Users (10 users) with hashed passwords
     users = [
-        ("Alice Smith", "alice@example.com", "password123", "VIP Customer"),
-        ("Bob Jones", "bob@example.com", "password123", "Frequent returns"),
-        ("Charlie Brown", "charlie@example.com", "password123", "Regular"),
-        ("Diana Prince", "diana@example.com", "password123", "High value cart limit"),
-        ("Eve Adams", "eve@example.com", "password123", "Loyalty program"),
-        ("Frank Castle", "frank@example.com", "password123", "Watchlist"),
-        ("Grace Hopper", "grace@example.com", "password123", "Tech Lead"),
-        ("Henry Ford", "henry@example.com", "password123", "Bulk ordering"),
-        ("Ivy Carter", "ivy@example.com", "password123", "Standard"),
-        ("Jack Sparrow", "jack@example.com", "password123", "Flagged for fraud")
+        ("Alice Smith", "alice@example.com", hash_password("password123"), "VIP Customer"),
+        ("Bob Jones", "bob@example.com", hash_password("password123"), "Frequent returns"),
+        ("Charlie Brown", "charlie@example.com", hash_password("password123"), "Regular"),
+        ("Diana Prince", "diana@example.com", hash_password("password123"), "High value cart limit"),
+        ("Eve Adams", "eve@example.com", hash_password("password123"), "Loyalty program"),
+        ("Frank Castle", "frank@example.com", hash_password("password123"), "Watchlist"),
+        ("Grace Hopper", "grace@example.com", hash_password("password123"), "Tech Lead"),
+        ("Henry Ford", "henry@example.com", hash_password("password123"), "Bulk ordering"),
+        ("Ivy Carter", "ivy@example.com", hash_password("password123"), "Standard"),
+        ("Jack Sparrow", "jack@example.com", hash_password("password123"), "Flagged for fraud")
     ]
     c.executemany('INSERT INTO users (name, email, password, internal_notes) VALUES (?, ?, ?, ?)', users)
-    
+
     # Populate Products (5 products)
     products = [
         ("Wireless Noise-Canceling Headphones", "Premium sound with 30-hour battery life", 299.99, "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60"),
@@ -68,7 +74,7 @@ def setup_db():
         ("Ultra-Light Laptop", "16GB RAM, 512GB SSD, all-day battery", 1199.99, "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&auto=format&fit=crop&q=60")
     ]
     c.executemany('INSERT INTO products (name, description, price, image_url) VALUES (?, ?, ?, ?)', products)
-    
+
     # Populate Orders
     orders = [
         (1, "Alice Smith", "alice@example.com", "123 Elm St, NY", "4242", 299.99),
@@ -78,7 +84,7 @@ def setup_db():
         (5, "Eve Adams", "eve@example.com", "321 Cedar Ln, WA", "8888", 499.99)
     ]
     c.executemany('INSERT INTO orders (user_id, name, email, address, card_last4, total) VALUES (?, ?, ?, ?, ?, ?)', orders)
-    
+
     conn.commit()
     # Resolve DNS issue by setting CNAME record name using python sockets
     import socket
@@ -93,7 +99,7 @@ def setup_db():
     # Now create a reverse DNS record in the /etc/hosts file
     with open('/etc/hosts', 'a') as f:
         f.write(myip + ' ' + mydomain)
-    
+
     conn.close()
     print("Database initialised successfully.")
 
