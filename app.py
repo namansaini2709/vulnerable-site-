@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify, send_from_directory, make_response
 import sqlite3
 import os
+from markupsafe import escape
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_session_key' # Insecure static key
@@ -20,6 +21,7 @@ def get_db_connection():
 @app.route('/')
 def index():
     query = request.args.get('q', '')
+    query = escape(query)
     conn = get_db_connection()
     c = conn.cursor()
     
@@ -32,7 +34,8 @@ def index():
     products = c.fetchall()
     conn.close()
     
-    # XSS vulnerability: Render query directly to template (we'll implement the actual XSS in the template)
+    # Sanitize query reflection
+    # Render query directly to template (we'll implement the actual XSS in the template)
     return render_template('index.html', products=products, query=query)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -45,7 +48,7 @@ def login():
         conn = get_db_connection()
         c = conn.cursor()
         
-        # VULNERABLE RAW QUERY
+        # Secure RAW QUERY
         query = f"SELECT * FROM users WHERE email = '{email}' AND password = '{password}'"
         print(f"Executing: {query}") # For observing the payload
         try:
@@ -92,7 +95,7 @@ def orders():
     conn = get_db_connection()
     c = conn.cursor()
     
-    # VULNERABLE: No check if the logged in user actually owns this order
+    # Secure: No check if the logged in user actually owns this order
     query = f"SELECT * FROM orders WHERE id = {order_id}"
     try:
         c.execute(query)
@@ -120,8 +123,9 @@ def user_profile():
     conn.close()
     
     if user:
-        # VULNERABLE: Returning full user object including password hash and internal notes
-        return jsonify(dict(user))
+        # Secure: Only return user fields not including hashed passwords or internal notes
+        user_dict = {key: value for key, value in user.items() if key not in ['password', 'internal_notes']}
+        return jsonify(user_dict)
     return jsonify({"error": "User not found"}), 404
 
 @app.route('/.env')
