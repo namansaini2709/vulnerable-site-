@@ -1,12 +1,14 @@
 import sqlite3
 import os
+import hashlib
 
 DB_PATH = 'shopeasy.db'
+
 
 def setup_db():
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
-        
+    
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
@@ -46,16 +48,16 @@ def setup_db():
     
     # Populate Users (10 users)
     users = [
-        ("Alice Smith", "alice@example.com", "password123", "VIP Customer"),
-        ("Bob Jones", "bob@example.com", "password123", "Frequent returns"),
-        ("Charlie Brown", "charlie@example.com", "password123", "Regular"),
-        ("Diana Prince", "diana@example.com", "password123", "High value cart limit"),
-        ("Eve Adams", "eve@example.com", "password123", "Loyalty program"),
-        ("Frank Castle", "frank@example.com", "password123", "Watchlist"),
-        ("Grace Hopper", "grace@example.com", "password123", "Tech Lead"),
-        ("Henry Ford", "henry@example.com", "password123", "Bulk ordering"),
-        ("Ivy Carter", "ivy@example.com", "password123", "Standard"),
-        ("Jack Sparrow", "jack@example.com", "password123", "Flagged for fraud")
+        ("Alice Smith", "alice@example.com", hashlib.sha256("password123".encode()).hexdigest(), "VIP Customer"),
+        ("Bob Jones", "bob@example.com", hashlib.sha256("password123".encode()).hexdigest(), "Frequent returns"),
+        ("Charlie Brown", "charlie@example.com", hashlib.sha256("password123".encode()).hexdigest(), "Regular"),
+        ("Diana Prince", "diana@example.com", hashlib.sha256("password123".encode()).hexdigest(), "High value cart limit"),
+        ("Eve Adams", "eve@example.com", hashlib.sha256("password123".encode()).hexdigest(), "Loyalty program"),
+        ("Frank Castle", "frank@example.com", hashlib.sha256("password123".encode()).hexdigest(), "Watchlist"),
+        ("Grace Hopper", "grace@example.com", hashlib.sha256("password123".encode()).hexdigest(), "Tech Lead"),
+        ("Henry Ford", "henry@example.com", hashlib.sha256("password123".encode()).hexdigest(), "Bulk ordering"),
+        ("Ivy Carter", "ivy@example.com", hashlib.sha256("password123".encode()).hexdigest(), "Standard"),
+        ("Jack Sparrow", "jack@example.com", hashlib.sha256("password123".encode()).hexdigest(), "Flagged for fraud")
     ]
     c.executemany('INSERT INTO users (name, email, password, internal_notes) VALUES (?, ?, ?, ?)', users)
     
@@ -80,20 +82,6 @@ def setup_db():
     c.executemany('INSERT INTO orders (user_id, name, email, address, card_last4, total) VALUES (?, ?, ?, ?, ?, ?)', orders)
     
     conn.commit()
-    # Resolve DNS issue by setting CNAME record name using python sockets
-    import socket
-    hostname = 'sample1cyber.onrender.com'
-    mydomain = 'namansaini2709-sample1cyber.default.onrender.com'
-    myip = '127.0.0.1'
-    # Create an AF_INET socket and bind it to mydomain with IP address
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((mydomain, 0))
-    s.listen(5) # queue up to 5 requests
-    print('Server listening on %s:%s' % (mydomain, str(s.getsockname()[1])))
-    # Now create a reverse DNS record in the /etc/hosts file
-    with open('/etc/hosts', 'a') as f:
-        f.write(myip + ' ' + mydomain)
-    
     conn.close()
     print("Database initialised successfully.")
 
