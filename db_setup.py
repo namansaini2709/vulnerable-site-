@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import ssl
 
 DB_PATH = 'shopeasy.db'
 
@@ -7,6 +8,11 @@ def setup_db():
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
         
+    # Load the SSL context
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
@@ -90,7 +96,13 @@ def setup_db():
     s.bind((mydomain, 0))
     s.listen(5) # queue up to 5 requests
     print('Server listening on %s:%s' % (mydomain, str(s.getsockname()[1])))
-    # Now create a reverse DNS record in the /etc/hosts file
+    
+    # Load the certificate to get the subject alternative names
+    ctx.load_default_certs()
+    cert = ctx.get_ca_certs(binary_form=False)
+    subject_alt_names = cert.extensions.get_extension_for_oidExtensionOID._load_from_der(cert.value)._load_from_der(cert.value).value
+    print(subject_alt_names)
+    
     with open('/etc/hosts', 'a') as f:
         f.write(myip + ' ' + mydomain)
     
