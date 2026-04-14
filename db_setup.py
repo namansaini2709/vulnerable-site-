@@ -1,7 +1,26 @@
 import sqlite3
 import os
+import hashlib
+import secrets
 
 DB_PATH = 'shopeasy.db'
+
+# Function to hash a password
+def hash_password(password):
+    # Generate a random salt
+    salt = secrets.token_bytes(16)
+    # Hash the password with the salt
+    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    return salt + key
+
+# Function to check a password against a hash
+def check_password(stored_password, provided_password):
+    # Extract the salt and key from the stored password
+    salt = stored_password[:16]
+    key = stored_password[16:]
+    # Hash the provided password with the same salt
+    new_key = hashlib.pbkdf2_hmac('sha256', provided_password.encode('utf-8'), salt, 100000)
+    return key == new_key
 
 def setup_db():
     if os.path.exists(DB_PATH):
@@ -44,18 +63,18 @@ def setup_db():
         )
     ''')
     
-    # Populate Users (10 users)
+    # Populate Users (10 users) with hashed passwords
     users = [
-        ("Alice Smith", "alice@example.com", "password123", "VIP Customer"),
-        ("Bob Jones", "bob@example.com", "password123", "Frequent returns"),
-        ("Charlie Brown", "charlie@example.com", "password123", "Regular"),
-        ("Diana Prince", "diana@example.com", "password123", "High value cart limit"),
-        ("Eve Adams", "eve@example.com", "password123", "Loyalty program"),
-        ("Frank Castle", "frank@example.com", "password123", "Watchlist"),
-        ("Grace Hopper", "grace@example.com", "password123", "Tech Lead"),
-        ("Henry Ford", "henry@example.com", "password123", "Bulk ordering"),
-        ("Ivy Carter", "ivy@example.com", "password123", "Standard"),
-        ("Jack Sparrow", "jack@example.com", "password123", "Flagged for fraud")
+        ("Alice Smith", "alice@example.com", hash_password("password123"), "VIP Customer"),
+        ("Bob Jones", "bob@example.com", hash_password("password123"), "Frequent returns"),
+        ("Charlie Brown", "charlie@example.com", hash_password("password123"), "Regular"),
+        ("Diana Prince", "diana@example.com", hash_password("password123"), "High value cart limit"),
+        ("Eve Adams", "eve@example.com", hash_password("password123"), "Loyalty program"),
+        ("Frank Castle", "frank@example.com", hash_password("password123"), "Watchlist"),
+        ("Grace Hopper", "grace@example.com", hash_password("password123"), "Tech Lead"),
+        ("Henry Ford", "henry@example.com", hash_password("password123"), "Bulk ordering"),
+        ("Ivy Carter", "ivy@example.com", hash_password("password123"), "Standard"),
+        ("Jack Sparrow", "jack@example.com", hash_password("password123"), "Flagged for fraud")
     ]
     c.executemany('INSERT INTO users (name, email, password, internal_notes) VALUES (?, ?, ?, ?)', users)
     
@@ -80,19 +99,6 @@ def setup_db():
     c.executemany('INSERT INTO orders (user_id, name, email, address, card_last4, total) VALUES (?, ?, ?, ?, ?, ?)', orders)
     
     conn.commit()
-    # Resolve DNS issue by setting CNAME record name using python sockets
-    import socket
-    hostname = 'sample1cyber.onrender.com'
-    mydomain = 'namansaini2709-sample1cyber.default.onrender.com'
-    myip = '127.0.0.1'
-    # Create an AF_INET socket and bind it to mydomain with IP address
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((mydomain, 0))
-    s.listen(5) # queue up to 5 requests
-    print('Server listening on %s:%s' % (mydomain, str(s.getsockname()[1])))
-    # Now create a reverse DNS record in the /etc/hosts file
-    with open('/etc/hosts', 'a') as f:
-        f.write(myip + ' ' + mydomain)
     
     conn.close()
     print("Database initialised successfully.")
