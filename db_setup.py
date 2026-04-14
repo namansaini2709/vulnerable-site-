@@ -1,5 +1,7 @@
 import sqlite3
 import os
+import hashlib
+import secrets
 
 DB_PATH = 'shopeasy.db'
 
@@ -17,6 +19,7 @@ def setup_db():
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            salt TEXT NOT NULL,
             internal_notes TEXT
         )
     ''')
@@ -46,18 +49,27 @@ def setup_db():
     
     # Populate Users (10 users)
     users = [
-        ("Alice Smith", "alice@example.com", "password123", "VIP Customer"),
-        ("Bob Jones", "bob@example.com", "password123", "Frequent returns"),
-        ("Charlie Brown", "charlie@example.com", "password123", "Regular"),
-        ("Diana Prince", "diana@example.com", "password123", "High value cart limit"),
-        ("Eve Adams", "eve@example.com", "password123", "Loyalty program"),
-        ("Frank Castle", "frank@example.com", "password123", "Watchlist"),
-        ("Grace Hopper", "grace@example.com", "password123", "Tech Lead"),
-        ("Henry Ford", "henry@example.com", "password123", "Bulk ordering"),
-        ("Ivy Carter", "ivy@example.com", "password123", "Standard"),
-        ("Jack Sparrow", "jack@example.com", "password123", "Flagged for fraud")
+        ("Alice Smith", "alice@example.com", "password123"),
+        ("Bob Jones", "bob@example.com", "password123"),
+        ("Charlie Brown", "charlie@example.com", "password123"),
+        ("Diana Prince", "diana@example.com", "password123"),
+        ("Eve Adams", "eve@example.com", "password123"),
+        ("Frank Castle", "frank@example.com", "password123"),
+        ("Grace Hopper", "grace@example.com", "password123"),
+        ("Henry Ford", "henry@example.com", "password123"),
+        ("Ivy Carter", "ivy@example.com", "password123"),
+        ("Jack Sparrow", "jack@example.com", "password123")
     ]
-    c.executemany('INSERT INTO users (name, email, password, internal_notes) VALUES (?, ?, ?, ?)', users)
+    
+    hashed_users = []
+    for user in users:
+        salt = secrets.token_hex(16)
+        password = user[2]
+        hashed_password = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+        hashed_password = hashed_password.hex()
+        hashed_users.append((user[0], user[1], hashed_password, salt, "VIP Customer" if user[0] == 'Alice Smith' else 'Regular'))
+    
+    c.executemany('INSERT INTO users (name, email, password, salt, internal_notes) VALUES (?, ?, ?, ?, ?)', hashed_users)
     
     # Populate Products (5 products)
     products = [
@@ -80,19 +92,6 @@ def setup_db():
     c.executemany('INSERT INTO orders (user_id, name, email, address, card_last4, total) VALUES (?, ?, ?, ?, ?, ?)', orders)
     
     conn.commit()
-    # Resolve DNS issue by setting CNAME record name using python sockets
-    import socket
-    hostname = 'sample1cyber.onrender.com'
-    mydomain = 'namansaini2709-sample1cyber.default.onrender.com'
-    myip = '127.0.0.1'
-    # Create an AF_INET socket and bind it to mydomain with IP address
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((mydomain, 0))
-    s.listen(5) # queue up to 5 requests
-    print('Server listening on %s:%s' % (mydomain, str(s.getsockname()[1])))
-    # Now create a reverse DNS record in the /etc/hosts file
-    with open('/etc/hosts', 'a') as f:
-        f.write(myip + ' ' + mydomain)
     
     conn.close()
     print("Database initialised successfully.")
