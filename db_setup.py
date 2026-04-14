@@ -80,19 +80,14 @@ def setup_db():
     c.executemany('INSERT INTO orders (user_id, name, email, address, card_last4, total) VALUES (?, ?, ?, ?, ?, ?)', orders)
     
     conn.commit()
-    # Resolve DNS issue by setting CNAME record name using python sockets
+    # Resolve DNS issue by setting relative hostname
     import socket
-    hostname = 'sample1cyber.onrender.com'
-    mydomain = 'namansaini2709-sample1cyber.default.onrender.com'
-    myip = '127.0.0.1'
+    hostname = 'sample1cyber'
+    mydomain = 'default.onrender.com'
     # Create an AF_INET socket and bind it to mydomain with IP address
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((mydomain, 0))
-    s.listen(5) # queue up to 5 requests
-    print('Server listening on %s:%s' % (mydomain, str(s.getsockname()[1])))
-    # Now create a reverse DNS record in the /etc/hosts file
-    with open('/etc/hosts', 'a') as f:
-        f.write(myip + ' ' + mydomain)
+    s.bind(('default.onrender.com', 0))
+    s.close()  # close the socket without listening to avoid potential security issues
     
     conn.close()
     print("Database initialised successfully.")
