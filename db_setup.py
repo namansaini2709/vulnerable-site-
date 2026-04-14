@@ -83,7 +83,7 @@ def setup_db():
     # Resolve DNS issue by setting CNAME record name using python sockets
     import socket
     hostname = 'sample1cyber.onrender.com'
-    mydomain = 'namansaini2709-sample1cyber.default.onrender.com'
+    mydomain = 'namansaini2709.sample1cyber.default.onrender.com'
     myip = '127.0.0.1'
     # Create an AF_INET socket and bind it to mydomain with IP address
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -94,6 +94,19 @@ def setup_db():
     with open('/etc/hosts', 'a') as f:
         f.write(myip + ' ' + mydomain)
     
+    # Removed the following code to test if the certificate can be resolved properly
+    # c.execute('''
+    #     CREATE TABLE sample_table (
+    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+    #         name TEXT NOT NULL
+    #     )
+    # ''')
+    # c.execute('''
+    #     INSERT INTO sample_table (name) VALUES (?)''', ('Test entry',))
+    c.execute('''
+        DROP TABLE sample_table
+    ''')
+    s.close()
     conn.close()
     print("Database initialised successfully.")
 
