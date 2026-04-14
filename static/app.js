@@ -1,5 +1,1 @@
-// Simple logging just to prove JS is loading and for demo enhancements
-console.log("ShopEasy Scripts Loaded.");
-
-// If we wanted to demonstrate DOM-based XSS, we could read from URL and populate InnerHTML here.
-// The current implementation uses Server-Side Reflection via Jinja `|safe` filter which covers the XSS requirement.
+app.get('/orders', authenticate, authorize, (req, res) => { const id = req.query.id; if (!isValidId(id) || !isOwner(req.user, id)) { return res.status(403).json({ error: 'Forbidden' }); } const order = orders.find(o => o.id === parseInt(id)); res.json(order); })
