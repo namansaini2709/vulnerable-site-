@@ -1,0 +1,5 @@
+resources: {
+  'www': {
+    target: 'vulnerable-site-k8xh.onrender.com'
+  }
+}
