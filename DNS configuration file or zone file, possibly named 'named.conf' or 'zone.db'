@@ -1,0 +1,1 @@
+CAA vulnerable-site-k8xh.onrender.com 'issue' 'letsencrypt.org'; CAA vulnerable-site-k8xh.onrender.com 'issuewild' 'letsencrypt.org'; CAA vulnerable-site-k8xh.onrender.com 'iodef' 'mailto:security@example.com'
