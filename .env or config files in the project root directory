@@ -1,0 +1,1 @@
+Environment variables loaded from .env file using a secure method, e.g., dotenv.config() in a Node.js application, with .env file not publicly accessible
