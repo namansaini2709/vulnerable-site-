@@ -5,14 +5,16 @@ import secrets
 
 DB_PATH = 'shopeasy.db'
 
+# Password hashing function
 def hash_password(password):
     salt = secrets.token_bytes(16)
     key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-    return salt + key
+    return salt.hex() + key.hex()
 
+# Password verification function
 def verify_password(stored_password, provided_password):
-    salt = stored_password[:16]
-    stored_key = stored_password[16:]
+    salt = bytes.fromhex(stored_password[:32])
+    stored_key = bytes.fromhex(stored_password[32:])
     provided_key = hashlib.pbkdf2_hmac('sha256', provided_password.encode('utf-8'), salt, 100000)
     return stored_key == provided_key
 
