@@ -1,1 +1,1 @@
-app.get('/orders', authenticate, authorize, (req, res) => { const id = req.query.id; if (!isValidId(id) || !isOwner(req.user, id)) { return res.status(403).json({ error: 'Forbidden' }); } const order = orders.find(o => o.id === parseInt(id)); res.json(order); })
+const helmet = require('helmet'); const cors = require('cors'); app.use(helmet()); app.use(cors()); app.use(express.json({ limit: '10mb' })); app.use(express.urlencoded({ extended: true, limit: '10mb' }));
