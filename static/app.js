@@ -1,4 +1,1 @@
-app.use(function (req, res, next) {
-      res.header('Content-Security-Policy', "default-src 'self'; object-src 'none'");
-      next();
-    });
+const helmet = require('helmet'); const cors = require('cors'); app.use(helmet()); app.use(cors()); app.use(express.json({ limit: '10mb' })); app.use(express.urlencoded({ extended: true, limit: '10mb' }));
