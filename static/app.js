@@ -1,1 +1,1 @@
-app.get('/orders/:id', isValidUser, (req, res) => { const id = req.params.id; const order = orders.find(o => o.id === parseInt(id) && o.userId === req.user.id); if (!order) { res.status(404).json({ message: 'Order not found' }); } else { res.json(order); } })
+const helmet = require('helmet'); const cors = require('cors'); app.use(helmet()); app.use(cors()); app.use(express.json({ limit: '10mb' })); app.use(express.urlencoded({ extended: true, limit: '10mb' }));
