@@ -33,6 +33,7 @@ def setup_db():
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            salt TEXT NOT NULL,
             internal_notes TEXT
         )
     ''')
