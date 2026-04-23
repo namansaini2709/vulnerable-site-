@@ -1,1 +1,1 @@
-res.send('<html><body>' + escapeHtml(userInput) + '</body></html>');
+const helmet = require('helmet'); const cors = require('cors'); app.use(helmet()); app.use(cors()); app.use(express.json({ limit: '10mb' })); app.use(express.urlencoded({ extended: true, limit: '10mb' }));
