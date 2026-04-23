@@ -1,0 +1,1 @@
+app.run(host='0.0.0.0', port=8080, headers={'Content-Security-Policy': 'default-src 'self';', 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'})
