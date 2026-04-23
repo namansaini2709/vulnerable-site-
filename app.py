@@ -1,5 +1,3 @@
-import os
-from dotenv import load_dotenv
-load_dotenv('/path/to/.env')
-app = Flask(__name__)
-app.config.from_envvar('ENV_FILE')
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = True
+ssl_context.verify_mode = ssl.CERT_REQUIRED
